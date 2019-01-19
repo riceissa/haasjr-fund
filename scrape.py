@@ -15,7 +15,7 @@ def main():
 
     with open(sys.argv[1], "w", newline="") as f:
         fieldnames = ["grantee", "grantee_url", "year", "amount", "issue_area",
-                      "sub_issue_area"]
+                      "sub_issue_area", "grant_info"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         while True:
@@ -62,10 +62,12 @@ def main():
                 # separate row below the grant. Therefore to get the grant
                 # info, we have to peek at the next row to see if it's a "grant
                 # info row".
-                if rows[index+1].get("class") == ["grants-search-grant-info-row"]:
-                    grant_info = rows[index+1].text.strip()
-                else:
-                    grant_info = ""
+                grant_info = ""
+                try:
+                    if rows[index+1].get("class") == ["grants-search-grant-info-row"]:
+                        grant_info = rows[index+1].text.strip()
+                except IndexError:
+                    pass
 
                 writer.writerow({
                     "grantee": grantee,
