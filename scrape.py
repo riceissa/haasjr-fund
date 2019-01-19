@@ -9,11 +9,18 @@ def main():
     page = 0
 
     with open(sys.argv[1], "w", newline="") as f:
-        has_next = True
-        while has_next:
+        fieldnames = ["grantee", "grantee_url", "year", "amount", "issue_area",
+                      "sub_issue_area"]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        while True:
             url = url_base + str(page)
             r = requests.get(url)
             soup = BeautifulSoup(r.content, "lxml")
+
+            if soup.body.find_all(text="Your search didn’t match any grants. Please try again."):
+                break
+
             tables = soup.find_all("table", {"class": "grants-search-results-table"})
             assert len(tables) == 1, "Error: there must be exactly one grants table on the page"
             table = tables[0]
@@ -30,6 +37,18 @@ def main():
                 cells = row.find_all("td")
                 grantee = cells[h["Grantee"]].text.strip()
                 grantee_url = cells[h["Grantee"]].a.get("href").strip()
+                year = cells[h["Year"]].text.strip()
+                amount = cells[h["Amount"]].text.strip()
+                issue_area = cells[h["Issue Area"]].text.strip()
+                sub_issue_area = cells[h["Sub-Issue Area"]].text.strip()
+                writer.writerow({
+                    "grantee": grantee,
+                    "grantee_url": grantee_url,
+                    "year": year,
+                    "amount": amount,
+                    "issue_area": issue_area,
+                    "sub_issue_area": sub_issue_area,
+                })
 
             page += 1
 
